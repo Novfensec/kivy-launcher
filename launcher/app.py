@@ -33,15 +33,15 @@ class Launcher(App):
             Environment = autoclass('android.os.Environment')
             sdcard_path = Environment.getExternalStorageDirectory()\
                 .getAbsolutePath()
-            self.paths = [sdcard_path + "/kivy"]
+            self.paths = [sdcard_path + "\\kivy"]
         else:
-            self.paths = [os.path.expanduser("~/kivy")]
+            self.paths = [os.path.expanduser("~\\kivy")]
 
         self.root = Builder.load_file("launcher/app.kv")
         self.refresh_entries()
 
         if platform == 'android':
-            from android.permissions import request_permissions, Permission
+            from android.permissions import request_permissions, Permission # type: ignore
             request_permissions([Permission.READ_EXTERNAL_STORAGE])
 
     def refresh_entries(self):
@@ -105,21 +105,21 @@ class Launcher(App):
 
     def start_desktop_activity(self, entry):
         import sys
-        from subprocess import Popen
+        from subprocess import Popen # nosec
         entrypoint = entry["entrypoint"]
         env = os.environ.copy()
         env["KIVYLAUNCHER_ENTRYPOINT"] = entrypoint
         main_py = os.path.realpath(os.path.join(
             os.path.dirname(__file__), "..", "main.py"))
-        cmd = Popen([sys.executable, main_py], env=env)
+        cmd = Popen([sys.executable, main_py], env=env) # nosec
         cmd.communicate()
 
     def start_android_activity(self, entry):
         self.log('starting activity')
         from jnius import autoclass
-        PythonActivity = autoclass("org.kivy.android.PythonActivity")
+        LauncherActivity = autoclass("org.kivy.android.LauncherActivity")
         System = autoclass("java.lang.System")
-        activity = PythonActivity.mActivity
+        activity = LauncherActivity.mActivity
         Intent = autoclass("android.content.Intent")
         String = autoclass("java.lang.String")
 
@@ -129,7 +129,7 @@ class Launcher(App):
         self.log('creating intent')
         intent = Intent(
             activity.getApplicationContext(),
-            PythonActivity
+            LauncherActivity
         )
         intent.putExtra("entrypoint", j_entrypoint)
         intent.putExtra("orientation", j_orientation)

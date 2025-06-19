@@ -29,7 +29,7 @@ def dispatch():
     # try android
     try:
         from jnius import autoclass
-        activity = autoclass("org.kivy.android.PythonActivity").mActivity
+        activity = autoclass("org.kivy.android.LauncherActivity").mActivity
         intent = activity.getIntent()
         entrypoint = intent.getStringExtra("entrypoint")
         orientation = intent.getStringExtra("orientation")

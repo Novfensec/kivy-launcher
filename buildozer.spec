@@ -85,10 +85,10 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (int) Android API to use
-# android.api = 30
+android.api = 34
 
 # (int) Minimum API required
-#android.minapi = 9
+android.minapi = 23
 
 # (int) Android SDK version to use
 #android.sdk = 20
@@ -114,7 +114,7 @@ fullscreen = 0
 # android.skip_update = False
 
 # (str) Android entry point, default is ok for Kivy-based app
-#android.entrypoint = org.renpy.android.PythonActivity
+android.entrypoint = org.launcher.android.LauncherActivity
 
 # (list) Pattern to whitelist for the whole project
 #android.whitelist =
@@ -133,7 +133,7 @@ fullscreen = 0
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src =
+android.add_src = ./src
 
 # (list) Android AAR archives to add (currently works only with sdl2_gradle
 # bootstrap)
@@ -144,13 +144,13 @@ fullscreen = 0
 #android.gradle_dependencies =
 
 # (str) python-for-android branch to use, defaults to stable
-p4a.branch = master
+p4a.branch = develop
 
 # (str) XML file to include as an intent filters in <activity> tag
 #android.manifest.intent_filters =
 
 # (str) launchMode to set for the main activity
-android.manifest.launch_mode = standard
+android.manifest.launch_mode = singleTask
 
 # (list) Android additionnal libraries to copy into libs/armeabi
 #android.add_libs_armeabi = libs/android/*.so
@@ -176,7 +176,7 @@ android.manifest.launch_mode = standard
 #android.copy_libs = 1
 
 # (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86
-android.archs = armeabi-v7a,arm64-v8a
+android.archs = armeabi-v7a, arm64-v8a
 
 android.accept_sdk_license = True
 
