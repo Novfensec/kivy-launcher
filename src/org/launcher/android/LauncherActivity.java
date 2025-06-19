@@ -568,8 +568,8 @@ public class LauncherActivity extends SDLActivity {
 
     @Override
     public void onBackPressed(){
-        Log.d("LauncherActivity": "Back button pressed.");
-        finish();
+        Log.d("LauncherActivity: Back button pressed.");
+        moveTaskToBack(true);
     }
 
     /**
