@@ -7,7 +7,7 @@ title = Kivy Launcher
 package.name = launcher
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.kivy
+package.domain = org.launcher
 
 # (str) Source code where the main.py live
 source.dir = .
