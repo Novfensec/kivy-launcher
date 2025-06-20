@@ -34,10 +34,10 @@ class Launcher(App):
 
     def build(self):
         self.log("Launcher started")
+        self._request_permissions()
         self._setup_paths()
         self.root = Builder.load_file("launcher/app.kv")
         self.refresh_entries()
-        self._request_permissions()
         return self.root
 
     def _setup_paths(self):
@@ -55,24 +55,24 @@ class Launcher(App):
     def _request_permissions(self):
         """Request Android permissions if needed"""
         if platform == 'android':
-            from android.permissions import request_permissions, Permission
+            from android.permissions import request_permissions, Permission # type: ignore
             request_permissions([Permission.READ_EXTERNAL_STORAGE])
 
     def refresh_entries(self):
         """Scan and display available entries"""
         self.log("Refreshing entries")
         entries = []
-        
+
         for entry in self.find_entries():
             entries.append({
                 "data_title": entry.get("title", "Untitled App"),
                 "data_path": entry.get("path"),
                 "data_logo": entry.get("logo", "data/logo/kivy-icon-64.png"),
                 "data_orientation": entry.get("orientation", ""),
-                "data_author": entry.get("author", ""),
+                "data_author": entry.get("author", "Kivy"),
                 "data_entry": entry
             })
-        
+
         self.root.ids.rv.data = entries
         self.log(f"Found {len(entries)} entries")
 
@@ -131,15 +131,16 @@ class Launcher(App):
         self.log(f"Launching desktop app: {entry['title']}")
         env = os.environ.copy()
         env["KIVYLAUNCHER_ENTRYPOINT"] = entry["entrypoint"]
-        
+
         # Use current interpreter
         main_script = realpath(join(dirname(__file__), "..", "main.py"))
         try:
-            process = __import__('subprocess').Popen(
+            process = __import__('subprocess').run( # nosec
                 [sys.executable, main_script],
-                env=env
+                env=env,
+                shell=True,
+                cwd=entry.get("path")
             )
-            process.communicate()
         except Exception as e:
             self.log(f"Failed to launch: {str(e)}", 'error')
 
@@ -148,14 +149,15 @@ class Launcher(App):
         self.log(f"Starting Android activity: {entry['title']}")
         try:
             from jnius import autoclass
-            PythonActivity = autoclass("org.launcher.android.LauncherActivity")
+            PythonActivity = autoclass("org.kivy.android.PythonActivity")
+            LauncherActivity = autoclass("org.launcher.android.LauncherActivity")
             Intent = autoclass("android.content.Intent")
             String = autoclass("java.lang.String")
 
-            intent = Intent(PythonActivity.mActivity, PythonActivity)
+            intent = Intent(PythonActivity.mActivity, LauncherActivity)
             intent.putExtra("entrypoint", String(entry["entrypoint"]))
             intent.putExtra("orientation", String(entry.get("orientation", "")))
-            
+
             PythonActivity.mActivity.startActivity(intent)
         except Exception as e:
             self.log(f"Android launch failed: {str(e)}", 'error')
