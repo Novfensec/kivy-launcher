@@ -114,11 +114,11 @@ android.minapi = 23
 # android.skip_update = False
 
 # (str) Android entry point, default is ok for Kivy-based app
-android.entrypoint = org.launcher.android.LauncherActivity
+# android.entrypoint = org.launcher.android.LauncherActivity
 
 # (str) Full name including package path of the Java class that implements Android Activity
 # use that parameter together with android.entrypoint to set custom Java class instead of PythonActivity
-android.activity_class_name = org.launcher.android.LauncherActivity
+# android.activity_class_name = org.launcher.android.LauncherActivity
 
 # (list) Pattern to whitelist for the whole project
 #android.whitelist =
