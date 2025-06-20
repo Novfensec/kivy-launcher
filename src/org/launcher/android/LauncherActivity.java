@@ -1,6 +1,6 @@
 package org.launcher.android;
 
-import org.kivy.android.PythonActivity
+import org.kivy.android.PythonActivity;
 
 
 public class LauncherActivity extends PythonActivity {
