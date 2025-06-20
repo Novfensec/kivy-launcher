@@ -8,14 +8,14 @@ public class LauncherActivity extends PythonActivity {
 
     @Override
     public void onBackPressed() {
-        Log.i(TAG, "Back button pressed");
-
-        // Call PythonActivity's custom handler
-        if (this instanceof PythonActivity) {
-            ((PythonActivity) this).handleBackPressed();
-            return;
-        }
-
+        // Optionally finish this activity
         super.onBackPressed();
+
+        // Start the main activity
+        Intent intent = new Intent(this, org.kivy.android.PythonActivity.class);
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
     }
+
 }
