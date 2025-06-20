@@ -6,10 +6,15 @@
 
 <IconLabel@Label>:
     font_name: "data/kivylauncher.ttf"
+    font_size: dp(20)
+    halign: 'center'
+    valign: 'middle'
+    size_hint: None, None
+    size: self.texture_size
 
 <IconButton@ButtonBehavior+IconLabel>
-    size_hint_x: None
-    width: self.height
+    size_hint: None, None
+    size: dp(40), dp(40)
     canvas.before:
         Color:
             rgba: rgba("#ffffff66") if self.state == "down" else rgba("#00000000")
@@ -19,13 +24,17 @@
 
 <LLabel@Label>:
     text_size: self.width, None
+    halign: 'left'
+    valign: 'middle'
+    padding_x: dp(2)
+    padding_y: dp(2)
 
 <TopBar@GridLayout>:
     rows: 1
-    padding: dp(4)
+    padding: dp(8), dp(6)
     size_hint_y: None
-    height: dp(48)
-    spacing: dp(10)
+    height: dp(52)
+    spacing: dp(12)
     canvas.before:
         Color:
             rgba: rgba("#3F51B5")
@@ -35,64 +44,80 @@
 
     IconLabel:
         text: ICON_KIVY
-        size_hint_x: None
-        width: self.height
+        size_hint: None, None
+        size: dp(36), dp(36)
+        color: rgba("#FFFFFF")
     Label:
         text: "Kivy Launcher"
         size_hint_x: None
-        width: self.texture_size[0]
-        font_size: dp(16)
+        width: self.texture_size[0] + dp(8)
+        font_size: dp(18)
         font_name: "data/Roboto-Medium.ttf"
-
+        color: rgba("#FFFFFF")
     IconButton:
         text: ICON_REFRESH
-        on_press:
-            app.refresh_entries()
-
+        on_press: app.refresh_entries()
+        color: rgba("#FFFFFF")
     ToggleButton:
         text: 'Show logs' if self.state == 'normal' else 'Hide logs'
         state: 'down' if app.display_logs else 'normal'
-        on_state:
-            app.display_logs = self.state == 'down'
-
+        on_state: app.display_logs = self.state == 'down'
+        size_hint_x: None
+        width: dp(100)
+        font_size: dp(14)
+        background_color: rgba("#FFFFFF22")
+        color: rgba("#FFFFFF")
 
 <LauncherEntry@BoxLayout>:
     data_title: ""
     data_orientation: ""
     data_logo: "data/logo/kivy-icon-64.png"
-    data_orientation: ""
     data_author: ""
     data_entry: None
-    padding: dp(4)
-    spacing: dp(8)
+    padding: dp(8), dp(6)
+    spacing: dp(12)
+    size_hint_y: None
+    height: dp(60)
     canvas.before:
         Color:
             rgba: rgba("#eeeef0")
         Rectangle:
-            pos: self.x + self.height + self.padding[0], self.y - self.padding[1] / 2.
-            size: self.width, dp(1)
+            pos: self.x, self.y
+            size: self.width, self.height
 
     Image:
         source: root.data_logo
-        size_hint_x: None
-        width: self.height
+        size_hint: None, None
+        size: dp(48), dp(48)
+        allow_stretch: True
+        keep_ratio: True
     BoxLayout:
         orientation: "vertical"
-        padding: 0, dp(4)
+        spacing: dp(2)
+        padding: dp(2), 0
+        size_hint_y: None
+        height: self.minimum_height
         LLabel:
             text: root.data_title
             color: rgba("#454547")
             font_name: "data/Roboto-Medium.ttf"
-            font_size: dp(13)
+            font_size: dp(15)
+            size_hint_y: None
+            height: self.texture_size[1] + dp(4)
         LLabel:
             text: root.data_author
             color: rgba("#b4b6b7")
-            font_size: dp(11)
+            font_size: dp(12)
+            size_hint_y: None
+            height: self.texture_size[1] + dp(2)
+    Widget:
+        size_hint_x: 1
     IconButton:
         text: ICON_PLAY
         on_release: app.start_activity(root.data_entry)
-        color: rgba("#b4b6b8")
-
+        color: rgba("#3F51B5")
+        size_hint: None, None
+        size: dp(40), dp(40)
 
 GridLayout:
     cols: 1
@@ -111,8 +136,8 @@ GridLayout:
                 size_hint_y: None
                 height: self.minimum_height
                 orientation: "vertical"
-                spacing: dp(2)
-                default_size: None, dp(48)
+                spacing: dp(4)
+                default_size: None, dp(60)
                 default_size_hint: 1, None
 
         RecycleView:
@@ -137,8 +162,8 @@ GridLayout:
                 size_hint_y: None
                 height: self.minimum_height
                 default_size_hint: None, None
-                default_size: 0, 20
-                padding: 5, 5
+                default_size: 0, 22
+                padding: dp(8), dp(8)
 
         Label:
             text:
@@ -156,4 +181,8 @@ GridLayout:
 <LogLabel@Label>:
     color: rgba("#222222FF")
     pos_hint: {'x': 0}
-    width: self.texture_size[0]
+    padding_x: dp(8)
+    padding_y: dp(2)
+    font_size: dp(12)
+    size_hint_y: None
+    height: self.texture_size[1] + dp(6)
