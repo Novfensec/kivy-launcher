@@ -148,7 +148,7 @@ class Launcher(App):
         self.log(f"Starting Android activity: {entry['title']}")
         try:
             from jnius import autoclass
-            PythonActivity = autoclass("org.kivy.android.PythonActivity")
+            PythonActivity = autoclass("org.launcher.android.LauncherActivity")
             Intent = autoclass("android.content.Intent")
             String = autoclass("java.lang.String")
 
