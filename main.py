@@ -32,7 +32,7 @@ def dispatch():
     # Try Android intent-based launch
     try:
         from jnius import autoclass
-        activity = autoclass("org.kivy.android.LauncherActivity").mActivity
+        activity = autoclass("org.kivy.android.PythonActivity").mActivity
         intent = activity.getIntent()
         entrypoint = intent.getStringExtra("entrypoint")
         orientation = intent.getStringExtra("orientation")
