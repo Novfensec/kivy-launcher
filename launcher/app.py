@@ -1,139 +1,162 @@
 # -*- coding: utf-8 -*-
-
 import os
+import sys
+import traceback
+import logging
+from glob import glob
 from datetime import datetime
-from kivy.lang import Builder
+from os.path import dirname, join, exists, expanduser, realpath
+
 from kivy.app import App
+from kivy.lang import Builder
 from kivy.utils import platform
 from kivy.properties import ListProperty, BooleanProperty
-from glob import glob
-from os.path import dirname, join, exists
-import traceback
 
-KIVYLAUNCHER_PATHS = os.environ.get("KIVYLAUNCHER_PATHS")
-
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('Launcher')
 
 class Launcher(App):
     paths = ListProperty()
     logs = ListProperty()
     display_logs = BooleanProperty(False)
 
-    def log(self, log):
-        print(log)
-        self.logs.append(f"{datetime.now().strftime('%X.%f')}: {log}")
+    def log(self, message, level='info'):
+        """Improved logging with timestamp and levels"""
+        timestamp = datetime.now().strftime('%X.%f')
+        log_entry = f"{timestamp}: {message}"
+        
+        # Add to UI logs
+        self.logs.append(log_entry)
+        
+        # Send to appropriate logger
+        getattr(logger, level)(message)
 
     def build(self):
-        self.log('start of log')
-
-        if KIVYLAUNCHER_PATHS:
-            self.paths.extend(KIVYLAUNCHER_PATHS.split(","))
-
-        if platform == 'android':
-            from jnius import autoclass
-            Environment = autoclass('android.os.Environment')
-            sdcard_path = Environment.getExternalStorageDirectory()\
-                .getAbsolutePath()
-            self.paths = [sdcard_path + "\\kivy"]
-        else:
-            self.paths = [os.path.expanduser("~\\kivy")]
-
+        self.log("Launcher started")
+        self._setup_paths()
         self.root = Builder.load_file("launcher/app.kv")
         self.refresh_entries()
+        self._request_permissions()
+        return self.root
 
+    def _setup_paths(self):
+        """Configure search paths based on environment and platform"""
+        if env_paths := os.environ.get("KIVYLAUNCHER_PATHS"):
+            self.paths.extend(env_paths.split(","))
+        elif platform == 'android':
+            from jnius import autoclass
+            Environment = autoclass('android.os.Environment')
+            sdcard_path = Environment.getExternalStorageDirectory().getAbsolutePath()
+            self.paths = [join(sdcard_path, "kivy")]
+        else:
+            self.paths = [expanduser("~/kivy")]
+
+    def _request_permissions(self):
+        """Request Android permissions if needed"""
         if platform == 'android':
-            from android.permissions import request_permissions, Permission # type: ignore
+            from android.permissions import request_permissions, Permission
             request_permissions([Permission.READ_EXTERNAL_STORAGE])
 
     def refresh_entries(self):
-        data = []
-        self.log('starting refresh')
-        for entry in self.find_entries(paths=self.paths):
-            self.log(f'found entry {entry}')
-            data.append({
-                "data_title": entry.get("title", "- no title -"),
+        """Scan and display available entries"""
+        self.log("Refreshing entries")
+        entries = []
+        
+        for entry in self.find_entries():
+            entries.append({
+                "data_title": entry.get("title", "Untitled App"),
                 "data_path": entry.get("path"),
                 "data_logo": entry.get("logo", "data/logo/kivy-icon-64.png"),
                 "data_orientation": entry.get("orientation", ""),
                 "data_author": entry.get("author", ""),
                 "data_entry": entry
             })
-        self.root.ids.rv.data = data
+        
+        self.root.ids.rv.data = entries
+        self.log(f"Found {len(entries)} entries")
 
-    def find_entries(self, path=None, paths=None):
-        self.log(f'looking for entries in {paths} or {path}')
-        if paths is not None:
-            for path in paths:
-                for entry in self.find_entries(path=path):
-                    yield entry
-
-        elif path is not None:
+    def find_entries(self):
+        """Generator to find all valid entries in configured paths"""
+        for path in self.paths:
             if not exists(path):
-                self.log(f'{path} does not exist')
-                return
-
-            self.log('{os.listdir(path)}')
-            for filename in glob("{}/*/android.txt".format(path)):
-                self.log(f'{filename} exist')
-                entry = self.read_entry(filename)
-                if entry:
+                self.log(f"Path not found: {path}", 'warning')
+                continue
+                
+            self.log(f"Scanning: {path}")
+            for filename in glob(join(path, "*", "android.txt")):
+                if entry := self.read_entry(filename):
                     yield entry
 
     def read_entry(self, filename):
-        self.log(f'reading entry {filename}')
-        data = {}
+        """Parse an android.txt entry file"""
+        self.log(f"Reading entry: {filename}")
         try:
             with open(filename, "r") as fd:
-                lines = fd.readlines()
-                for line in lines:
-                    k, v = line.strip().split("=", 1)
-                    data[k] = v
-        except Exception:
+                data = {}
+                for line in fd:
+                    if '=' in line:
+                        key, value = line.strip().split('=', 1)
+                        data[key.strip()] = value.strip()
+                
+                if not data.get('title'):
+                    self.log(f"Missing title in {filename}", 'warning')
+                    return None
+                
+                # Add derived paths
+                entry_dir = dirname(filename)
+                data.update({
+                    "entrypoint": realpath(join(entry_dir, "main.py")),
+                    "path": entry_dir,
+                    "logo": realpath(join(entry_dir, "icon.png")) 
+                            if exists(join(entry_dir, "icon.png")) 
+                            else "data/logo/kivy-icon-64.png"
+                })
+                return data
+                
+        except Exception as e:
+            self.log(f"Error reading {filename}: {str(e)}", 'error')
             traceback.print_exc()
             return None
-        data["entrypoint"] = join(dirname(filename), "main.py")
-        data["path"] = dirname(filename)
-        icon = join(data["path"], "icon.png")
-        if exists(icon):
-            data["icon"] = icon
-        return data
 
     def start_activity(self, entry):
+        """Launch selected entry with platform-specific method"""
         if platform == "android":
-            self.start_android_activity(entry)
+            self._start_android_activity(entry)
         else:
-            self.start_desktop_activity(entry)
+            self._start_desktop_activity(entry)
 
-    def start_desktop_activity(self, entry):
-        import sys
-        from subprocess import Popen # nosec
-        entrypoint = entry["entrypoint"]
+    def _start_desktop_activity(self, entry):
+        """Launch entry on desktop"""
+        self.log(f"Launching desktop app: {entry['title']}")
         env = os.environ.copy()
-        env["KIVYLAUNCHER_ENTRYPOINT"] = entrypoint
-        main_py = os.path.realpath(os.path.join(
-            os.path.dirname(__file__), "..", "main.py"))
-        cmd = Popen([sys.executable, main_py], env=env) # nosec
-        cmd.communicate()
+        env["KIVYLAUNCHER_ENTRYPOINT"] = entry["entrypoint"]
+        
+        # Use current interpreter
+        main_script = realpath(join(dirname(__file__), "..", "main.py"))
+        try:
+            process = __import__('subprocess').Popen(
+                [sys.executable, main_script],
+                env=env
+            )
+            process.communicate()
+        except Exception as e:
+            self.log(f"Failed to launch: {str(e)}", 'error')
 
-    def start_android_activity(self, entry):
-        self.log('starting activity')
-        from jnius import autoclass
-        LauncherActivity = autoclass("org.kivy.android.LauncherActivity")
-        System = autoclass("java.lang.System")
-        activity = LauncherActivity.mActivity
-        Intent = autoclass("android.content.Intent")
-        String = autoclass("java.lang.String")
+    def _start_android_activity(self, entry):
+        """Launch entry on Android using JNI"""
+        self.log(f"Starting Android activity: {entry['title']}")
+        try:
+            from jnius import autoclass
+            PythonActivity = autoclass("org.kivy.android.PythonActivity")
+            Intent = autoclass("android.content.Intent")
+            String = autoclass("java.lang.String")
 
-        j_entrypoint = String(entry.get("entrypoint"))
-        j_orientation = String(entry.get("orientation"))
-
-        self.log('creating intent')
-        intent = Intent(
-            activity.getApplicationContext(),
-            LauncherActivity
-        )
-        intent.putExtra("entrypoint", j_entrypoint)
-        intent.putExtra("orientation", j_orientation)
-        self.log(f'ready to start intent {j_entrypoint} {j_orientation}')
-        activity.startActivity(intent)
-        self.log('activity started')
-        System.exit(0)
+            intent = Intent(PythonActivity.mActivity, PythonActivity)
+            intent.putExtra("entrypoint", String(entry["entrypoint"]))
+            intent.putExtra("orientation", String(entry.get("orientation", "")))
+            
+            PythonActivity.mActivity.startActivity(intent)
+        except Exception as e:
+            self.log(f"Android launch failed: {str(e)}", 'error')
+            traceback.print_exc()
