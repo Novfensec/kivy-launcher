@@ -4,29 +4,23 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.Nullable;
-
 import org.kivy.android.PythonActivity;
 
 public class LauncherActivity extends PythonActivity {
     private static final String TAG = "LauncherActivity";
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        Log.d(TAG, "dispatchKeyEvent: " + keyCode);
 
-        // Handle back button press
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Log.d(TAG, "Back pressed, launching PythonActivity again");
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            Log.d(TAG, "BACK key intercepted!");
+            finish();  // or send to Python
+            return true;  // Consume the event
+        }
 
-                Intent intent = new Intent(LauncherActivity.this, PythonActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-            }
-        });
+        // For all other keys, let SDL handle it
+        return super.dispatchKeyEvent(event);
     }
 }
