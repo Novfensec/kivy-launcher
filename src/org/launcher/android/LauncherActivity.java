@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.Nullable;
 
 import org.kivy.android.PythonActivity;
 
@@ -12,10 +13,10 @@ public class LauncherActivity extends PythonActivity {
     private static final String TAG = "LauncherActivity";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Add OnBackPressedCallback to handle back button press
+        // Handle back button press
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -24,7 +25,6 @@ public class LauncherActivity extends PythonActivity {
                 Intent intent = new Intent(LauncherActivity.this, PythonActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
-
                 finish();
             }
         });
