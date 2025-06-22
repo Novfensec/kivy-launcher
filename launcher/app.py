@@ -54,9 +54,12 @@ class Launcher(App):
 
     def _request_permissions(self):
         """Request Android permissions if needed"""
+        def callback(*args):
+            pass
+
         if platform == 'android':
             from android.permissions import request_permissions, Permission # type: ignore
-            request_permissions([Permission.READ_EXTERNAL_STORAGE])
+            request_permissions([Permission.MANAGE_EXTERNAL_STORAGE], callback)
 
     def refresh_entries(self):
         """Scan and display available entries"""
