@@ -184,13 +184,10 @@ android.archs = armeabi-v7a, arm64-v8a
 
 android.accept_sdk_license = True
 
-# (list) Gradle dependencies to add
-android.gradle_dependencies = androidx.activity:activity:1.10.1
-
 # (bool) Enable AndroidX support. Enable when 'android.gradle_dependencies'
 # contains an 'androidx' package, or any package from Kotlin source.
 # android.enable_androidx requires android.api >= 28
-android.enable_androidx = True
+# android.enable_androidx = True
 
 #
 # Python for android (p4a) specific
