@@ -222,6 +222,7 @@ android.accept_sdk_license = True
 
 # (list) Permissions
 [app:android.permissions]
+android.permission.MANAGE_EXTERNAL_STORAGE
 READ_EXTERNAL_STORAGE
 WRITE_EXTERNAL_STORAGE
 ACCESS_LOCATION_EXTRA_COMMANDS
